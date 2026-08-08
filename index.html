@@ -38,12 +38,13 @@
   /* Klasemen */
   .grup{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:18px;overflow:hidden}
   .grup-h{background:var(--krem);color:var(--merah);font-weight:800;padding:9px 14px;font-size:15px;border-left:6px solid var(--merah)}
-  .tbl-wrap{overflow-x:auto}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{border-collapse:collapse;width:100%;font-size:13px}
   th,td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--garis);white-space:nowrap}
   th{background:var(--merah);color:#fff;font-weight:600;font-size:12px}
   td.nama,th.nama{text-align:left;font-weight:600;min-width:150px}
   .col-key{background:var(--krem2) !important}
+  th.col-key{color:var(--merah-tua) !important;font-weight:800}
   td.col-key{font-weight:700;background:#fbf1cf !important}
   tr.lolos td{background:var(--hijau-bg)}
   tr.lolos td.col-key{background:#d6efdd !important}
@@ -56,7 +57,7 @@
   .chip{background:#fff;border:1px solid var(--garis);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;color:var(--teks2)}
   .chip.active{background:var(--merah);color:#fff;border-color:var(--merah);font-weight:600}
   .j-tanggal{background:var(--merah-tua);color:#fff;font-weight:700;padding:7px 14px;font-size:13px;border-radius:8px 8px 0 0;margin-top:6px}
-  .j-tbl{background:#fff;border-radius:0 0 8px 8px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;margin-bottom:14px}
+  .j-tbl{background:#fff;border-radius:0 0 8px 8px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin-bottom:14px}
   .win{font-weight:800;color:var(--merah)}
   .vs{color:var(--teks2);font-size:11px}
   .mid{font-weight:700;color:var(--merah)}
