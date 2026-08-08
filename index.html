@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSG Sport Competition 2026 — Tenis Meja</title>
+<style>
+  :root{
+    --merah:#8f1616; --merah2:#a51d1d; --merah-tua:#6e0f0f;
+    --krem:#fdf3d9; --krem2:#f9e9bf; --hijau:#1f7a3d; --hijau-bg:#e3f5e9;
+    --abu:#f4f4f4; --garis:#e2e2e2; --teks:#222; --teks2:#666;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--teks);background:#efefef;-webkit-text-size-adjust:100%}
+  a{color:inherit}
+  /* Header */
+  header{background:linear-gradient(180deg,var(--merah2),var(--merah));color:#fff;text-align:center;padding:18px 14px 12px}
+  header h1{margin:0;font-size:22px;letter-spacing:.5px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9;font-style:italic}
+  .status{font-size:12px;margin-top:8px;opacity:.95}
+  .status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7CFC00;margin-right:5px;vertical-align:middle}
+  .status.warn .dot{background:#ffcc00}
+  .status.err .dot{background:#ff5252}
+  /* Tabs */
+  nav{display:flex;background:var(--merah-tua);position:sticky;top:0;z-index:10;overflow-x:auto}
+  nav button{flex:1;min-width:110px;background:none;border:none;color:#f0d9d9;padding:13px 10px;font-size:14px;font-weight:600;
+             cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+  nav button.active{color:#fff;border-bottom-color:var(--krem2);background:rgba(255,255,255,.08)}
+  .toolbar{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:8px 14px;background:#fff;border-bottom:1px solid var(--garis);flex-wrap:wrap}
+  .toolbar .left{margin-right:auto;font-size:12px;color:var(--teks2)}
+  .btn{background:var(--merah);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--merah);border:1px solid var(--merah)}
+  main{max-width:1200px;margin:0 auto;padding:14px}
+  .view{display:none}
+  .view.active{display:block}
+  /* Klasemen */
+  .grup{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:18px;overflow:hidden}
+  .grup-h{background:var(--krem);color:var(--merah);font-weight:800;padding:9px 14px;font-size:15px;border-left:6px solid var(--merah)}
+  .tbl-wrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--garis);white-space:nowrap}
+  th{background:var(--merah);color:#fff;font-weight:600;font-size:12px}
+  td.nama,th.nama{text-align:left;font-weight:600;min-width:150px}
+  .col-key{background:var(--krem2) !important}
+  td.col-key{font-weight:700;background:#fbf1cf !important}
+  tr.lolos td{background:var(--hijau-bg)}
+  tr.lolos td.col-key{background:#d6efdd !important}
+  .badge{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--hijau);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+  .rank{color:var(--teks2);font-weight:700;margin-right:6px}
+  .legend{font-size:11px;color:var(--teks2);padding:8px 14px;line-height:1.7}
+  .legend b{color:var(--teks)}
+  /* Jadwal */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{background:#fff;border:1px solid var(--garis);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;color:var(--teks2)}
+  .chip.active{background:var(--merah);color:#fff;border-color:var(--merah);font-weight:600}
+  .j-tanggal{background:var(--merah-tua);color:#fff;font-weight:700;padding:7px 14px;font-size:13px;border-radius:8px 8px 0 0;margin-top:6px}
+  .j-tbl{background:#fff;border-radius:0 0 8px 8px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;margin-bottom:14px}
+  .win{font-weight:800;color:var(--merah)}
+  .vs{color:var(--teks2);font-size:11px}
+  .mid{font-weight:700;color:var(--merah)}
+  .skor-pill{display:inline-block;background:var(--krem);border:1px solid var(--krem2);border-radius:5px;padding:2px 8px;font-weight:700;color:var(--merah-tua);font-size:12px}
+  .tbd{color:#999;font-style:italic}
+  .tag{font-size:10px;padding:1px 6px;border-radius:4px;background:#eee;color:#777;font-weight:700}
+  .tag.ko{background:#f6dede;color:var(--merah)}
+  /* Bracket */
+  .bracket{display:flex;gap:26px;overflow-x:auto;padding:6px 2px 14px}
+  .round{display:flex;flex-direction:column;justify-content:space-around;gap:16px;min-width:210px}
+  .round-title{text-align:center;font-weight:800;color:var(--merah);font-size:13px;margin-bottom:2px}
+  .match{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;border:1px solid var(--garis)}
+  .match .m-id{background:var(--krem);color:var(--merah);font-size:10px;font-weight:700;padding:3px 8px}
+  .slot{display:flex;justify-content:space-between;padding:8px 10px;font-size:13px;border-top:1px solid var(--garis)}
+  .slot .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+  .slot.winner{background:var(--hijau-bg)}
+  .slot.winner .nm{font-weight:800;color:var(--hijau)}
+  .slot .sc{font-weight:700;color:var(--teks2);margin-left:8px}
+  .final-wrap{align-self:center}
+  .champion{margin-top:10px;text-align:center;background:linear-gradient(180deg,#fff6d8,#f7e39c);border:2px solid #e3c34e;border-radius:10px;padding:12px}
+  .champion .lbl{font-size:11px;color:#9a7b12;font-weight:700;letter-spacing:1px}
+  .champion .nm{font-size:18px;font-weight:800;color:#7a5c00;margin-top:2px}
+  .foot{text-align:center;color:var(--teks2);font-size:11px;padding:20px 10px}
+  .banner{background:#fff3cd;border:1px solid #ffe08a;color:#7a5b00;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;line-height:1.5}
+  .banner.err{background:#fdecec;border-color:#f5c2c2;color:#8a1f1f}
+  .banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px}
+  @media(max-width:560px){
+    header h1{font-size:18px}
+    th,td{padding:6px 6px;font-size:12px}
+    nav button{min-width:auto;font-size:13px;padding:12px 6px}
+  }
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     KONFIGURASI  —  bagian ini yang perlu diisi panitia (lihat PANDUAN.md)
+     Tempel ID Google Sheet Anda di antara tanda kutip di bawah.
+     Contoh URL sheet: https://docs.google.com/spreadsheets/d/1AbC.....XyZ/edit
+     Maka SHEET_ID = "1AbC.....XyZ"
+     Kosongkan ("") untuk memakai MODE DEMO (data contoh, tanpa skor).
+====================================================================== -->
+<script>
+  const SHEET_ID   = "1m4yQSC8_SV_2vQ2djx225llRXMhtcgpe7cQWKOJ8X6o";           // <-- ISI ID GOOGLE SHEET DI SINI
+  const TAB_PESERTA = "Peserta";   // nama tab peserta
+  const TAB_JADWAL  = "Jadwal";    // nama tab jadwal
+  const AUTO_REFRESH_DETIK = 45;   // interval refresh otomatis
+</script>
+
+<header>
+  <h1>🏓 PSG Sport Competition 2026</h1>
+  <p>Klasemen &amp; Jadwal Turnamen Tenis Meja</p>
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">Memuat…</span></div>
+</header>
+
+<nav>
+  <button data-view="klasemen" class="active">📊 Klasemen</button>
+  <button data-view="jadwal">📅 Jadwal</button>
+  <button data-view="bracket">🏆 Bagan 8 Besar</button>
+</nav>
+
+<div class="toolbar">
+  <span class="left" id="lastUpdate"></span>
+  <button class="btn ghost" id="btnRefresh">↻ Refresh</button>
+</div>
+
+<main>
+  <div id="banner"></div>
+  <section id="view-klasemen" class="view active"></section>
+  <section id="view-jadwal" class="view"></section>
+  <section id="view-bracket" class="view"></section>
+</main>
+
+<div class="foot">
+  Dashboard read-only • Data dikelola di Google Sheet • Klasemen &amp; bagan dihitung otomatis
+</div>
+
+<script>
+/* =========================================================================
+   DATA DEMO (dipakai bila SHEET_ID kosong / gagal dimuat)
+   Sama persis dengan isi Peserta.csv & Jadwal.csv (skor kosong).
+========================================================================= */
+const DEMO_PESERTA = [
+  ["A","Romy / Lidya"],["A","Julbintor / Maribe"],["A","Juli W.P / Lina"],["A","Masud / Dhanu"],["A","Septian / Satria"],
+  ["B","Denni MIS / Rahman"],["B","Lucky / Roby"],["B","Dedy / Griselda"],["B","Hotben / Soleh"],
+  ["C","Dimas / Andre"],["C","Deni Fin / Naufan"],["C","Adji / Dendy"],["C","Jarean / Reinaldy"],
+  ["D","Aris / Jefri"],["D","Heri / SanSan"],["D","Junisa / Prayogo"],["D","Donny / Asep"],
+].map(r=>({Grup:r[0],Pasangan:r[1]}));
+
+const DEMO_JADWAL = [
+  ["M-01","Senin, 10 Agt 2026","17:10","Grup A","Best of 3","Romy / Lidya","Julbintor / Maribe","Dimas"],
+  ["M-02","Senin, 10 Agt 2026","17:30","Grup A","Best of 3","Juli W.P / Lina","Masud / Dhanu","Dimas"],
+  ["M-03","Senin, 10 Agt 2026","17:50","Grup A","Best of 3","Romy / Lidya","Septian / Satria","Donny"],
+  ["M-04","Senin, 10 Agt 2026","18:10","Grup A","Best of 3","Julbintor / Maribe","Juli W.P / Lina","Denni"],
+  ["M-05","Senin, 10 Agt 2026","18:30","Grup A","Best of 3","Masud / Dhanu","Septian / Satria","Adji"],
+  ["M-06","Senin, 10 Agt 2026","18:50","Grup A","Best of 3","Romy / Lidya","Juli W.P / Lina","Naufan"],
+  ["M-07","Senin, 10 Agt 2026","19:10","Grup A","Best of 3","Julbintor / Maribe","Masud / Dhanu","Lucky"],
+  ["M-08","Selasa, 11 Agt 2026","17:10","Grup A","Best of 3","Romy / Lidya","Masud / Dhanu","Dimas"],
+  ["M-09","Selasa, 11 Agt 2026","17:30","Grup A","Best of 3","Julbintor / Maribe","Septian / Satria","Donny"],
+  ["M-10","Selasa, 11 Agt 2026","17:50","Grup A","Best of 3","Juli W.P / Lina","Septian / Satria","Denni"],
+  ["M-11","Selasa, 11 Agt 2026","18:10","Grup B","Best of 3","Denni MIS / Rahman","Lucky / Roby","Adji"],
+  ["M-12","Selasa, 11 Agt 2026","18:30","Grup B","Best of 3","Dedy / Griselda","Hotben / Soleh","Naufan"],
+  ["M-13","Selasa, 11 Agt 2026","18:50","Grup B","Best of 3","Denni MIS / Rahman","Dedy / Griselda","Lucky"],
+  ["M-14","Selasa, 11 Agt 2026","19:10","Grup B","Best of 3","Lucky / Roby","Hotben / Soleh","Dimas"],
+  ["M-15","Rabu, 12 Agt 2026","17:10","Grup B","Best of 3","Denni MIS / Rahman","Hotben / Soleh","Septian"],
+  ["M-16","Rabu, 12 Agt 2026","17:30","Grup B","Best of 3","Lucky / Roby","Dedy / Griselda","Donny"],
+  ["M-17","Rabu, 12 Agt 2026","17:50","Grup C","Best of 3","Dimas / Andre","Deni Fin / Naufan","Denni"],
+  ["M-18","Rabu, 12 Agt 2026","18:10","Grup C","Best of 3","Adji / Dendy","Jarean / Reinaldy","Naufan"],
+  ["M-19","Rabu, 12 Agt 2026","18:30","Grup C","Best of 3","Dimas / Andre","Adji / Dendy","Lucky"],
+  ["M-20","Rabu, 12 Agt 2026","18:50","Grup C","Best of 3","Deni Fin / Naufan","Jarean / Reinaldy","Donny"],
+  ["M-21","Rabu, 12 Agt 2026","19:10","Grup C","Best of 3","Dimas / Andre","Jarean / Reinaldy","Septian"],
+  ["M-22","Jumat, 14 Agt 2026","17:10","Grup D","Best of 3","Aris / Jefri","Heri / SanSan","Dimas"],
+  ["M-23","Jumat, 14 Agt 2026","17:30","Grup C","Best of 3","Deni Fin / Naufan","Adji / Dendy","Denni"],
+  ["M-24","Jumat, 14 Agt 2026","17:50","Grup D","Best of 3","Heri / SanSan","Donny / Asep","Adji"],
+  ["M-25","Jumat, 14 Agt 2026","18:10","Grup D","Best of 3","Junisa / Prayogo","Donny / Asep","Naufan"],
+  ["M-26","Jumat, 14 Agt 2026","18:30","Grup D","Best of 3","Heri / SanSan","Junisa / Prayogo","Lucky"],
+  ["M-27","Jumat, 14 Agt 2026","18:50","Grup D","Best of 3","Aris / Jefri","Junisa / Prayogo","Dimas"],
+  ["M-28","Jumat, 14 Agt 2026","19:10","Grup D","Best of 3","Aris / Jefri","Donny / Asep","Septian"],
+  ["QF-1","Rabu, 19 Agt 2026","17:10","Quarter Final","Best of 5","JUARA_A","RUNNERUP_B","Donny"],
+  ["QF-2","Rabu, 19 Agt 2026","17:35","Quarter Final","Best of 5","JUARA_B","RUNNERUP_A","Denni"],
+  ["QF-3","Rabu, 19 Agt 2026","18:00","Quarter Final","Best of 5","JUARA_C","RUNNERUP_D","Adji"],
+  ["QF-4","Rabu, 19 Agt 2026","18:25","Quarter Final","Best of 5","JUARA_D","RUNNERUP_C","Naufan"],
+  ["SF-1","Jumat, 21 Agt 2026","17:10","Semifinal","Best of 5","WIN_QF-1","WIN_QF-3","Lucky"],
+  ["SF-2","Jumat, 21 Agt 2026","17:35","Semifinal","Best of 5","WIN_QF-2","WIN_QF-4","Dimas"],
+  ["Juara 3","Jumat, 21 Agt 2026","18:00","Perebutan Juara 3","Best of 5","LOSE_SF-1","LOSE_SF-2","Septian"],
+  ["FINAL","Jumat, 21 Agt 2026","18:25","Grand Final","Best of 5","WIN_SF-1","WIN_SF-2","Donny"],
+].map(r=>({MatchID:r[0],Tanggal:r[1],Jam:r[2],Babak:r[3],Format:r[4],TimA:r[5],TimB:r[6],Wasit:r[7],Skor:""}));
+
+/* =========================================================================
+   STATE
+========================================================================= */
+let PESERTA = [];   // {Grup, Pasangan}
+let JADWAL  = [];   // {MatchID, Tanggal, Jam, Babak, Format, TimA, TimB, Wasit, Skor}
+let refreshTimer = null;
+
+/* =========================================================================
+   CSV PARSER (menangani field ber-quote & koma di dalam field)
+========================================================================= */
+function parseCSV(text){
+  const rows=[]; let row=[], field='', i=0, q=false;
+  text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  while(i<text.length){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; }
+      else field+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===',') { row.push(field); field=''; }
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=c;
+    }
+    i++;
+  }
+  if(field!==''||row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+// CSV -> array of objects, keyed by header (case-insensitive)
+function csvToObjects(text){
+  const rows=parseCSV(text).filter(r=>r.some(c=>String(c).trim()!==''));
+  if(!rows.length) return [];
+  const headers=rows[0].map(h=>String(h).trim());
+  return rows.slice(1).map(r=>{
+    const o={}; headers.forEach((h,idx)=>o[h]=(r[idx]!==undefined?String(r[idx]).trim():'')); return o;
+  });
+}
+// akses field object secara case-insensitive
+function pick(obj,name){
+  if(obj[name]!==undefined) return obj[name];
+  const k=Object.keys(obj).find(k=>k.toLowerCase()===name.toLowerCase());
+  return k!==undefined?obj[k]:'';
+}
+
+/* =========================================================================
+   PARSE SKOR  ("11-9, 8-11, 11-7"  ->  detail per set + agregat)
+========================================================================= */
+function parseSkor(skor){
+  if(!skor||!String(skor).trim()) return null;
+  const raw=String(skor).replace(/–|—/g,'-'); // normalisasi tanda minus
+  const parts=raw.split(/[,;]/);
+  const sets=[]; let bad=false;
+  for(const p of parts){
+    const t=p.trim(); if(!t) continue;
+    const m=t.match(/^(\d+)\s*-\s*(\d+)$/);
+    if(!m){ bad=true; continue; }
+    sets.push([parseInt(m[1],10),parseInt(m[2],10)]);
+  }
+  if(!sets.length) return {valid:false,bad:true,raw:skor};
+  let setsA=0,setsB=0,ptsA=0,ptsB=0;
+  for(const [a,b] of sets){ ptsA+=a; ptsB+=b; if(a>b)setsA++; else if(b>a)setsB++; }
+  const winner = setsA>setsB?'A':(setsB>setsA?'B':null);
+  return {valid:true, bad, raw:skor, sets, setsA, setsB, ptsA, ptsB, winner,
+          display: sets.map(s=>s[0]+'-'+s[1]).join(', '), setSummary:setsA+'-'+setsB};
+}
+const isGrup = b => /^grup/i.test(String(b||'').trim());
+const grupLetter = b => String(b||'').trim().split(/\s+/)[1] || '';
+
+/* =========================================================================
+   KLASEMEN
+========================================================================= */
+function hitungKlasemen(){
+  const grupMap={}; // letter -> { pasangan -> stats }
+  PESERTA.forEach(p=>{
+    const g=String(pick(p,'Grup')).trim(); const nm=String(pick(p,'Pasangan')).trim();
+    if(!g||!nm) return;
+    (grupMap[g]=grupMap[g]||{})[nm]={pasangan:nm,M:0,W:0,L:0,Poin:0,SG:0,SL:0,SD:0,PW:0,PL:0,PD:0};
+  });
+  JADWAL.forEach(m=>{
+    if(!isGrup(m.Babak)) return;
+    const g=grupLetter(m.Babak);
+    const A=m.TimA, B=m.TimB;
+    const st=grupMap[g]; if(!st||!st[A]||!st[B]) return;
+    const s=parseSkor(m.Skor); if(!s||!s.valid||!s.winner) return;
+    st[A].M++; st[B].M++;
+    st[A].SG+=s.setsA; st[A].SL+=s.setsB; st[A].PW+=s.ptsA; st[A].PL+=s.ptsB;
+    st[B].SG+=s.setsB; st[B].SL+=s.setsA; st[B].PW+=s.ptsB; st[B].PL+=s.ptsA;
+    if(s.winner==='A'){ st[A].W++; st[B].L++; } else { st[B].W++; st[A].L++; }
+  });
+  // finalisasi + urutan
+  const result={};
+  Object.keys(grupMap).sort().forEach(g=>{
+    const arr=Object.values(grupMap[g]);
+    arr.forEach(t=>{ t.Poin=t.W*2+t.L*1; t.SD=t.SG-t.SL; t.PD=t.PW-t.PL; });
+    arr.sort((a,b)=>{
+      if(b.Poin!==a.Poin) return b.Poin-a.Poin;
+      if(b.SD!==a.SD)     return b.SD-a.SD;
+      if(b.PD!==a.PD)     return b.PD-a.PD;
+      const h=headToHead(g,a.pasangan,b.pasangan); if(h!==0) return h;
+      return a.pasangan.localeCompare(b.pasangan);
+    });
+    result[g]=arr;
+  });
+  return result;
+}
+function headToHead(g,a,b){
+  for(const m of JADWAL){
+    if(!isGrup(m.Babak)||grupLetter(m.Babak)!==g) continue;
+    const s=parseSkor(m.Skor); if(!s||!s.valid||!s.winner) continue;
+    if(m.TimA===a&&m.TimB===b) return s.winner==='A'?-1:1;
+    if(m.TimA===b&&m.TimB===a) return s.winner==='A'?1:-1;
+  }
+  return 0;
+}
+function grupSelesai(g){
+  const ms=JADWAL.filter(m=>isGrup(m.Babak)&&grupLetter(m.Babak)===g);
+  if(!ms.length) return false;
+  return ms.every(m=>{ const s=parseSkor(m.Skor); return s&&s.valid&&s.winner; });
+}
+
+/* =========================================================================
+   RESOLUSI TOKEN BRACKET  (JUARA_A, RUNNERUP_B, WIN_QF-1, LOSE_SF-1)
+========================================================================= */
+function resolveTeam(token, klas, guard){
+  const t=String(token||'').trim();
+  guard=guard||{};
+  const mJR=t.match(/^(JUARA|RUNNERUP)_([A-Z])$/i);
+  if(mJR){
+    const g=mJR[2].toUpperCase(); const idx=/juara/i.test(mJR[1])?0:1;
+    const lbl=(idx===0?'Juara':'Runner-up')+' Grup '+g;
+    if(grupSelesai(g) && klas[g] && klas[g][idx]) return {name:klas[g][idx].pasangan,resolved:true,label:lbl};
+    return {name:lbl,resolved:false,label:lbl};
+  }
+  const mWL=t.match(/^(WIN|LOSE)_(.+)$/i);
+  if(mWL){
+    const kind=mWL[1].toUpperCase(); const id=mWL[2].trim();
+    const lbl=(kind==='WIN'?'Pemenang ':'Kalah ')+id;
+    if(guard[id]) return {name:lbl,resolved:false,label:lbl}; // cegah rekursi
+    guard[id]=true;
+    const mm=JADWAL.find(x=>String(x.MatchID).trim()===id);
+    if(!mm) return {name:lbl,resolved:false,label:lbl};
+    const s=parseSkor(mm.Skor);
+    if(!s||!s.valid||!s.winner) return {name:lbl,resolved:false,label:lbl};
+    const winTok = s.winner==='A'?mm.TimA:mm.TimB;
+    const loseTok= s.winner==='A'?mm.TimB:mm.TimA;
+    const r=resolveTeam(kind==='WIN'?winTok:loseTok, klas, guard);
+    return {name:r.name,resolved:r.resolved,label:lbl};
+  }
+  return {name:t,resolved:true,label:t}; // nama literal
+}
+
+/* =========================================================================
+   RENDER — KLASEMEN
+========================================================================= */
+const KETLABEL={M:'Main',W:'Menang',L:'Kalah',Poin:'Poin',SG:'Set +',SL:'Set −',SD:'Sel. Set',PW:'Poin +',PL:'Poin −',PD:'Sel. Skor'};
+function renderKlasemen(klas){
+  const cols=['M','W','L','Poin','SG','SL','SD','PW','PL','PD'];
+  const keyCols=new Set(['Poin','SD','PD']);
+  let html='';
+  Object.keys(klas).sort().forEach(g=>{
+    const lolos=grupSelesai(g);
+    html+=`<div class="grup"><div class="grup-h">GRUP ${g}${lolos?'':' <span style="font-weight:600;font-size:11px;opacity:.7">(berlangsung)</span>'}</div><div class="tbl-wrap"><table><thead><tr>`;
+    html+=`<th class="nama">Pasangan Pemain</th>`;
+    cols.forEach(c=>html+=`<th class="${keyCols.has(c)?'col-key':''}" title="${KETLABEL[c]}">${c}</th>`);
+    html+=`</tr></thead><tbody>`;
+    klas[g].forEach((t,i)=>{
+      const isLolos=i<2;
+      html+=`<tr class="${isLolos?'lolos':''}"><td class="nama"><span class="rank">${i+1}</span>${esc(t.pasangan)}${isLolos?`<span class="badge">${i===0?'JUARA':'RUNNER-UP'}</span>`:''}</td>`;
+      cols.forEach(c=>{
+        let v=t[c]; if(c==='SD'||c==='PD') v=(v>0?'+':'')+v;
+        html+=`<td class="${keyCols.has(c)?'col-key':''}">${v}</td>`;
+      });
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  });
+  html+=`<div class="legend">
+    <b>Keterangan:</b> M=Main, W=Menang, L=Kalah, <b>Poin</b>=Poin Klasemen (Menang 2 · Kalah 1),
+    SG/SL=Set Menang/Kalah, <b>SD</b>=Selisih Set, PW/PL=Poin (skor) Menang/Kalah, <b>PD</b>=Selisih Skor.<br>
+    <b>2 teratas tiap grup (hijau) lolos ke babak 8 Besar.</b>
+    Urutan peringkat: Poin → Selisih Set → Selisih Skor → hasil pertemuan langsung.
+  </div>`;
+  document.getElementById('view-klasemen').innerHTML=html;
+}
+
+/* =========================================================================
+   RENDER — JADWAL
+========================================================================= */
+let filterAktif='Semua';
+function renderJadwal(klas){
+  const groupsFilter=['Semua','Grup A','Grup B','Grup C','Grup D','Knockout'];
+  let html='<div class="filters">';
+  groupsFilter.forEach(f=>html+=`<div class="chip ${filterAktif===f?'active':''}" data-f="${f}">${f}</div>`);
+  html+='</div>';
+
+  const match = m => {
+    if(filterAktif==='Semua') return true;
+    if(filterAktif==='Knockout') return !isGrup(m.Babak);
+    return String(m.Babak).trim()===filterAktif;
+  };
+  const list=JADWAL.filter(match);
+
+  // kelompokkan per tanggal
+  const byDate={};
+  list.forEach(m=>{ (byDate[m.Tanggal]=byDate[m.Tanggal]||[]).push(m); });
+
+  Object.keys(byDate).forEach(tgl=>{
+    html+=`<div class="j-tanggal">${esc(tgl)}</div><div class="j-tbl tbl-wrap"><table><thead><tr>
+      <th>Match</th><th>Jam</th><th>Babak</th><th class="nama">Tim A</th><th>Skor</th><th class="nama">Tim B</th><th>Wasit</th></tr></thead><tbody>`;
+    byDate[tgl].forEach(m=>{
+      const ko=!isGrup(m.Babak);
+      const A=resolveTeam(m.TimA,klas), B=resolveTeam(m.TimB,klas);
+      const s=parseSkor(m.Skor);
+      const aWin=s&&s.valid&&s.winner==='A', bWin=s&&s.valid&&s.winner==='B';
+      const nameCell=(r,win)=>`<td class="nama"><span class="${win?'win':''} ${r.resolved?'':'tbd'}">${esc(r.name)}</span></td>`;
+      let skorCell='<span class="vs">vs</span>';
+      if(s&&s.valid) skorCell=`<span class="skor-pill" title="Set: ${s.setSummary}">${esc(s.display)}</span>`;
+      else if(s&&s.bad) skorCell=`<span class="tbd" title="Format skor tidak terbaca">?</span>`;
+      html+=`<tr>
+        <td><span class="mid">${esc(m.MatchID)}</span></td>
+        <td>${esc(m.Jam)}</td>
+        <td><span class="tag ${ko?'ko':''}">${esc(m.Babak)}</span></td>
+        ${nameCell(A,aWin)}
+        <td>${skorCell}</td>
+        ${nameCell(B,bWin)}
+        <td>${esc(m.Wasit)}</td>
+      </tr>`;
+    });
+    html+='</tbody></table></div>';
+  });
+  if(!list.length) html+='<div class="banner">Tidak ada pertandingan pada filter ini.</div>';
+  const el=document.getElementById('view-jadwal');
+  el.innerHTML=html;
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ filterAktif=c.dataset.f; renderJadwal(klas); });
+}
+
+/* =========================================================================
+   RENDER — BRACKET 8 BESAR
+========================================================================= */
+function renderBracket(klas){
+  const find=id=>JADWAL.find(m=>String(m.MatchID).trim()===id);
+  const matchCard=(id)=>{
+    const m=find(id); if(!m) return '';
+    const A=resolveTeam(m.TimA,klas), B=resolveTeam(m.TimB,klas);
+    const s=parseSkor(m.Skor);
+    const aWin=s&&s.valid&&s.winner==='A', bWin=s&&s.valid&&s.winner==='B';
+    const slot=(r,win,sc)=>`<div class="slot ${win?'winner':''}"><span class="nm ${r.resolved?'':'tbd'}">${esc(r.name)}</span><span class="sc">${sc}</span></div>`;
+    return `<div class="match"><div class="m-id">${esc(m.MatchID)} · ${esc(m.Jam)}</div>
+      ${slot(A,aWin, s&&s.valid?s.setsA:'')}
+      ${slot(B,bWin, s&&s.valid?s.setsB:'')}</div>`;
+  };
+  let html='<div class="bracket">';
+  html+=`<div class="round"><div class="round-title">Perempat Final</div>${matchCard('QF-1')}${matchCard('QF-2')}${matchCard('QF-3')}${matchCard('QF-4')}</div>`;
+  html+=`<div class="round"><div class="round-title">Semifinal</div>${matchCard('SF-1')}${matchCard('SF-2')}</div>`;
+  html+=`<div class="round final-wrap"><div class="round-title">Final</div>${matchCard('FINAL')}`;
+  // juara
+  const fin=find('FINAL'); const s=fin?parseSkor(fin.Skor):null;
+  if(s&&s.valid&&s.winner){
+    const champ=resolveTeam(s.winner==='A'?fin.TimA:fin.TimB,klas);
+    if(champ.resolved) html+=`<div class="champion"><div class="lbl">🏆 JUARA</div><div class="nm">${esc(champ.name)}</div></div>`;
+  }
+  html+=`</div>`;
+  html+='</div>';
+  // perebutan juara 3
+  html+=`<div style="margin-top:18px"><div class="round-title" style="text-align:left;margin-left:2px">Perebutan Juara 3</div><div style="max-width:230px">${matchCard('Juara 3')}</div></div>`;
+  document.getElementById('view-bracket').innerHTML=html;
+}
+
+/* =========================================================================
+   UTIL
+========================================================================= */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function setStatus(text,type){ // type: ok|warn|err
+  const el=document.getElementById('status'); el.className='status'+(type&&type!=='ok'?(' '+type):'');
+  document.getElementById('statusText').textContent=text;
+}
+function showBanner(html,type){
+  document.getElementById('banner').innerHTML = html?`<div class="banner ${type||''}">${html}</div>`:'';
+}
+
+/* =========================================================================
+   LOAD DATA
+========================================================================= */
+function gvizURL(tab){
+  return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(SHEET_ID)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+}
+async function fetchTab(tab){
+  const res=await fetch(gvizURL(tab)+'&_cb='+Date.now(),{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const text=await res.text();
+  if(/^\s*</.test(text)) throw new Error('Sheet bukan publik / tab tidak ditemukan'); // dapat HTML login
+  return csvToObjects(text);
+}
+async function loadData(){
+  if(!SHEET_ID){
+    PESERTA=DEMO_PESERTA; JADWAL=DEMO_JADWAL;
+    setStatus('Mode Demo (belum tersambung Google Sheet)','warn');
+    showBanner('Saat ini menampilkan <b>data contoh</b>. Untuk memakai data asli, isi <code>SHEET_ID</code> di file <code>index.html</code> dan sambungkan Google Sheet. Lihat <b>PANDUAN.md</b>.','');
+    renderAll(); return;
+  }
+  try{
+    setStatus('Memuat data…','ok');
+    const [pes,jad]=await Promise.all([fetchTab(TAB_PESERTA),fetchTab(TAB_JADWAL)]);
+    PESERTA=pes.map(o=>({Grup:pick(o,'Grup'),Pasangan:pick(o,'Pasangan')})).filter(p=>p.Pasangan);
+    JADWAL=jad.map(o=>({
+      MatchID:pick(o,'MatchID'),Tanggal:pick(o,'Tanggal'),Jam:pick(o,'Jam'),
+      Babak:pick(o,'Babak'),Format:pick(o,'Format'),TimA:pick(o,'TimA'),
+      TimB:pick(o,'TimB'),Wasit:pick(o,'Wasit'),Skor:pick(o,'Skor')
+    })).filter(m=>m.MatchID);
+    if(!PESERTA.length||!JADWAL.length) throw new Error('Data kosong (cek nama tab & isi Sheet)');
+    setStatus('Tersambung ke Google Sheet','ok');
+    showBanner('','');
+    renderAll();
+  }catch(e){
+    PESERTA=DEMO_PESERTA; JADWAL=DEMO_JADWAL;
+    setStatus('Gagal memuat Sheet — menampilkan data demo','err');
+    showBanner('Gagal memuat Google Sheet: <b>'+esc(e.message)+'</b>. Pastikan Sheet dibagikan <i>"Anyone with the link: Viewer"</i> dan nama tab benar (<code>'+esc(TAB_PESERTA)+'</code>, <code>'+esc(TAB_JADWAL)+'</code>). Sementara menampilkan data demo.','err');
+    renderAll();
+  }
+}
+function renderAll(){
+  const klas=hitungKlasemen();
+  renderKlasemen(klas);
+  renderJadwal(klas);
+  renderBracket(klas);
+  const now=new Date();
+  document.getElementById('lastUpdate').textContent='Terakhir diperbarui '+
+    String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+}
+
+/* =========================================================================
+   NAV & INIT
+========================================================================= */
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('view-'+b.dataset.view).classList.add('active');
+  };
+});
+document.getElementById('btnRefresh').onclick=loadData;
+
+loadData();
+if(AUTO_REFRESH_DETIK>0 && SHEET_ID){
+  refreshTimer=setInterval(loadData, AUTO_REFRESH_DETIK*1000);
+}
+</script>
+</body>
+</html>
