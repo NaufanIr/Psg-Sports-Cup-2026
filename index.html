@@ -132,7 +132,7 @@
 </main>
 
 <div class="foot">
-  Dashboard read-only • Data dikelola di Google Sheet • Klasemen &amp; bagan dihitung otomatis
+  Maintained by Naufan Irfanda • Hosted with ❤️ by GitHub • Klasemen &amp; bagan dihitung otomatis
 </div>
 
 <script>
@@ -497,7 +497,7 @@ async function loadData(){
       TimB:pick(o,'TimB'),Wasit:pick(o,'Wasit'),Skor:pick(o,'Skor')
     })).filter(m=>m.MatchID);
     if(!PESERTA.length||!JADWAL.length) throw new Error('Data kosong (cek nama tab & isi Sheet)');
-    setStatus('Tersambung ke Google Sheet','ok');
+    setStatus('Connected','ok');
     showBanner('','');
     renderAll();
   }catch(e){
