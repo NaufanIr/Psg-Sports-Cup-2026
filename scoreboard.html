@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scoreboard Wasit — PSG Sport Competition 2026</title>
+<style>
+  :root{
+    --merah:#8f1616; --merah2:#a51d1d; --merah-tua:#6e0f0f;
+    --biru:#12617a; --biru2:#157591; --biru-tua:#0d4658;
+    --krem:#fdf3d9; --krem2:#f9e9bf; --hijau:#1f7a3d; --hijau-bg:#e3f5e9;
+    --abu:#f4f4f4; --garis:#e2e2e2; --teks:#222; --teks2:#666;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--teks);background:#efefef;-webkit-text-size-adjust:100%}
+  a{color:inherit}
+
+  /* Header */
+  header{background:linear-gradient(180deg,var(--merah2),var(--merah));color:#fff;text-align:center;padding:14px 14px 10px}
+  header h1{margin:0;font-size:20px;letter-spacing:.5px}
+  header p{margin:3px 0 0;font-size:12px;opacity:.9;font-style:italic}
+  .status{font-size:12px;margin-top:6px;opacity:.95}
+  .status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7CFC00;margin-right:5px;vertical-align:middle}
+  .status.warn .dot{background:#ffcc00}
+  .status.err .dot{background:#ff5252}
+
+  main{max-width:1200px;margin:0 auto;padding:14px}
+  .btn{background:var(--merah);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--merah);border:1px solid var(--merah)}
+  .btn.gray{background:#fff;color:var(--teks2);border:1px solid var(--garis)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+  /* ---------- SCREEN: PILIH MATCH ---------- */
+  .card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:16px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:16px;color:var(--merah)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;font-weight:700;color:var(--teks2);margin-bottom:6px}
+  select,input[type=text]{width:100%;padding:11px 12px;font-size:15px;border:1px solid var(--garis);border-radius:8px;background:#fff;color:var(--teks)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row .field{flex:1;min-width:130px}
+  .seg{display:flex;gap:0;border:1px solid var(--garis);border-radius:8px;overflow:hidden}
+  .seg button{flex:1;background:#fff;border:none;padding:11px 6px;font-size:15px;font-weight:700;color:var(--teks2);cursor:pointer;border-right:1px solid var(--garis)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--merah);color:#fff}
+  .banner{background:#fff3cd;border:1px solid #ffe08a;color:#7a5b00;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5}
+  .banner.err{background:#fdecec;border-color:#f5c2c2;color:#8a1f1f}
+  .banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px}
+  .resume{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+  /* ---------- SCREEN: BOARD ---------- */
+  #screen-board{display:none}
+  body.playing{background:#111}
+  body.playing header, body.playing main{}
+  .board-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .board-top .mid{font-weight:800;color:#fff;background:var(--merah);border-radius:6px;padding:4px 10px;font-size:13px}
+  .board-top .babak{font-size:12px;color:#bbb}
+  .board-top .spacer{margin-left:auto}
+  .bo-info{font-size:12px;color:#bbb}
+
+  .panels{display:flex;gap:14px;align-items:stretch}
+  .panel{flex:1;border-radius:16px;padding:18px 16px 20px;color:#fff;display:flex;flex-direction:column;align-items:center;
+         box-shadow:0 4px 18px rgba(0,0,0,.35);min-width:0}
+  .panel.a{background:linear-gradient(160deg,var(--merah2),var(--merah-tua))}
+  .panel.b{background:linear-gradient(160deg,var(--biru2),var(--biru-tua))}
+  .panel .name{font-size:clamp(15px,2.4vw,22px);font-weight:800;text-align:center;line-height:1.15;min-height:2.3em;
+               display:flex;align-items:center;justify-content:center;width:100%;word-break:break-word;
+               background:transparent;border:none;color:#fff}
+  .panel .name:focus{outline:2px dashed rgba(255,255,255,.6);border-radius:6px}
+  .pips{display:flex;gap:8px;margin:8px 0 2px;min-height:20px;align-items:center}
+  .pip{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25)}
+  .pip.on{background:#ffe08a;box-shadow:0 0 0 2px rgba(255,224,138,.35)}
+  .games-won{font-size:12px;letter-spacing:1px;opacity:.85;text-transform:uppercase}
+  .points{font-size:clamp(72px,20vw,190px);font-weight:900;line-height:.95;margin:6px 0 10px;font-variant-numeric:tabular-nums;
+          text-shadow:0 3px 12px rgba(0,0,0,.35)}
+  .serve{display:inline-block;width:14px;height:14px;border-radius:50%;background:#ffe08a;margin-bottom:8px;visibility:hidden}
+  .serve.on{visibility:visible;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.7}}
+  .plus{width:100%;padding:20px;border:none;border-radius:14px;background:rgba(255,255,255,.16);color:#fff;
+        font-size:26px;font-weight:900;cursor:pointer;letter-spacing:1px}
+  .plus:active{background:rgba(255,255,255,.30)}
+  .minus{margin-top:10px;background:rgba(0,0,0,.22);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:16px;font-weight:800;cursor:pointer}
+  .minus:active{background:rgba(0,0,0,.38)}
+
+  .midbar{text-align:center;margin:14px 0 4px}
+  .mp{display:inline-block;font-size:15px;font-weight:900;letter-spacing:1px;padding:6px 16px;border-radius:20px}
+  .mp.game{background:#ffe08a;color:#5a4300}
+  .mp.match{background:var(--hijau);color:#fff}
+  .mp.winner{background:linear-gradient(180deg,#fff6d8,#f7e39c);color:#7a5c00;border:2px solid #e3c34e;font-size:17px}
+  .history{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;min-height:14px}
+  .g-chip{background:rgba(255,255,255,.12);color:#eee;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 9px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  .g-chip b{color:#ffe08a}
+
+  .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .save-status{text-align:center;margin-top:12px;font-size:13px;color:#ccc;min-height:18px}
+  .save-status.ok{color:#7CFC00}
+  .save-status.err{color:#ff8a8a}
+  .save-status.work{color:#ffcc00}
+
+  .foot{text-align:center;color:var(--teks2);font-size:11px;padding:18px 10px}
+  body.playing .foot{color:#666}
+
+  @media(max-width:640px){
+    .panels{gap:8px}
+    .panel{padding:12px 8px 14px}
+    .plus{padding:16px;font-size:22px}
+    header{padding:10px}
+  }
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     KONFIGURASI — isi bagian ini (lihat PANDUAN-SCOREBOARD.md)
+     - SHEET_ID     : sama dengan dashboard (index.html).
+     - APPS_SCRIPT_URL : URL Web App Apps Script (…/exec) untuk menyimpan skor.
+     - SAVE_SECRET  : kata sandi ringan; harus sama dengan SECRET di Code.gs.
+====================================================================== -->
+<script>
+  const SHEET_ID        = "1m4yQSC8_SV_2vQ2djx225llRXMhtcgpe7cQWKOJ8X6o";
+  const TAB_JADWAL       = "Jadwal";
+  const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbyjZ9EC_ItP-Jb66iMRuFIFoLmlp0G1OXZncL1jic7AEFzdyKr6JWVye3O1ca7elgB6aQ/exec";            // <-- tempel URL Web App (…/exec) di sini
+  const SAVE_SECRET      = "psg-fun-ping-pong-2026"; // <-- samakan dengan SECRET di Code.gs
+  const DEFAULT_POIN     = 11;            // poin per game (11 standar; 21 lama)
+  const DEFAULT_BEST_OF  = 5;             // best-of default bila Format tak terbaca
+</script>
+
+<header>
+  <h1>🏓 Scoreboard Wasit</h1>
+  <p>PSG Sport Competition 2026 — Tenis Meja</p>
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">Memuat…</span></div>
+</header>
+
+<main>
+  <!-- ============ SCREEN 1: PILIH MATCH ============ -->
+  <section id="screen-select">
+    <div id="banner"></div>
+
+    <div class="card" id="resumeCard" style="display:none">
+      <div class="resume">
+        <div id="resumeText" style="font-size:14px;color:var(--teks)"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="btnResume">Lanjutkan</button>
+          <button class="btn gray" id="btnDiscard">Buang</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pilih Pertandingan</h2>
+      <div class="field">
+        <label>Match (dari tab Jadwal)</label>
+        <select id="matchSelect"><option value="">Memuat daftar…</option></select>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Tim / Pemain A</label>
+          <input type="text" id="inA" placeholder="Nama Tim A">
+        </div>
+        <div class="field">
+          <label>Tim / Pemain B</label>
+          <input type="text" id="inB" placeholder="Nama Tim B">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Poin per game</label>
+          <div class="seg" id="segPoin"></div>
+        </div>
+        <div class="field">
+          <label>Best of (jumlah game)</label>
+          <div class="seg" id="segBo"></div>
+        </div>
+        <div class="field">
+          <label>Servis pertama</label>
+          <div class="seg" id="segServe"></div>
+        </div>
+      </div>
+      <button class="btn" id="btnStart" style="width:100%;padding:14px;font-size:16px">▶ Mulai Scoreboard</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 2: BOARD ============ -->
+  <section id="screen-board">
+    <div class="board-top">
+      <span class="mid" id="bMid">M-00</span>
+      <span class="babak" id="bBabak"></span>
+      <span class="bo-info" id="bBoInfo"></span>
+      <span class="spacer"></span>
+      <button class="btn gray" id="btnFull">⛶ Layar Penuh</button>
+      <button class="btn ghost" id="btnBack">← Ganti Match</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel a">
+        <div class="name" id="nameA" contenteditable="true" spellcheck="false">Tim A</div>
+        <div class="pips" id="pipsA"></div>
+        <div class="games-won">game menang: <span id="gwA">0</span></div>
+        <div class="points" id="ptA">0</div>
+        <span class="serve" id="srvA"></span>
+        <button class="plus" data-team="a">+1 POIN</button>
+        <button class="minus" data-team="a">−1</button>
+      </div>
+      <div class="panel b">
+        <div class="name" id="nameB" contenteditable="true" spellcheck="false">Tim B</div>
+        <div class="pips" id="pipsB"></div>
+        <div class="games-won">game menang: <span id="gwB">0</span></div>
+        <div class="points" id="ptB">0</div>
+        <span class="serve" id="srvB"></span>
+        <button class="plus" data-team="b">+1 POIN</button>
+        <button class="minus" data-team="b">−1</button>
+      </div>
+    </div>
+
+    <div class="midbar"><span class="mp" id="mp" style="display:none"></span></div>
+    <div class="history" id="history"></div>
+
+    <div class="controls">
+      <button class="btn gray" id="btnUndo">↶ Undo</button>
+      <button class="btn gray" id="btnResetGame">Reset Game</button>
+      <button class="btn gray" id="btnResetMatch">Reset Match</button>
+      <button class="btn" id="btnSave">💾 Simpan Skor ke Sheet</button>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+  </section>
+</main>
+
+<div class="foot" id="foot">Scoreboard Wasit • PSG Sport Competition 2026</div>
+
+<script>
+/* =========================================================================
+   HELPERS (disalin & konsisten dengan index.html dashboard)
+========================================================================= */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function setStatus(text,type){
+  const el=document.getElementById('status'); el.className='status'+(type&&type!=='ok'?(' '+type):'');
+  document.getElementById('statusText').textContent=text;
+}
+function showBanner(html,type){
+  document.getElementById('banner').innerHTML = html?`<div class="banner ${type||''}">${html}</div>`:'';
+}
+function parseCSV(text){
+  const rows=[]; let row=[], field='', i=0, q=false;
+  text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  while(i<text.length){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; } else field+=c; }
+    else{
+      if(c==='"') q=true;
+      else if(c===',') { row.push(field); field=''; }
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=c;
+    }
+    i++;
+  }
+  if(field!==''||row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+function csvToObjects(text){
+  const rows=parseCSV(text).filter(r=>r.some(c=>String(c).trim()!==''));
+  if(!rows.length) return [];
+  const headers=rows[0].map(h=>String(h).trim());
+  return rows.slice(1).map(r=>{
+    const o={}; headers.forEach((h,idx)=>o[h]=(r[idx]!==undefined?String(r[idx]).trim():'')); return o;
+  });
+}
+function pick(obj,name){
+  if(obj[name]!==undefined) return obj[name];
+  const k=Object.keys(obj).find(k=>k.toLowerCase()===name.toLowerCase());
+  return k!==undefined?obj[k]:'';
+}
+function gvizURL(tab){
+  return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(SHEET_ID)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+}
+async function fetchTab(tab){
+  const res=await fetch(gvizURL(tab)+'&_cb='+Date.now(),{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const text=await res.text();
+  if(/^\s*</.test(text)) throw new Error('Sheet bukan publik / tab tidak ditemukan');
+  return csvToObjects(text);
+}
+// best-of dari kolom Format ("Best of 5" -> 5)
+function bestOfFromFormat(fmt){
+  const m=String(fmt||'').match(/(\d+)/);
+  const n=m?parseInt(m[1],10):0;
+  return (n===3||n===5||n===7)?n:DEFAULT_BEST_OF;
+}
+// normalisasi string skor untuk perbandingan
+function normSkor(s){ return String(s||'').replace(/[–—]/g,'-').replace(/\s+/g,''); }
+
+/* =========================================================================
+   STATE
+========================================================================= */
+let JADWAL=[];                 // daftar match dari Sheet (untuk dropdown)
+let cfgPoin=DEFAULT_POIN, cfgBo=DEFAULT_BEST_OF, cfgServe=0; // pilihan di layar select
+const LS_KEY='psg_scoreboard_state_v1';
+
+// S = state pertandingan aktif
+let S=null;
+let undoStack=[];
+
+function newState(o){
+  return {
+    matchId:o.matchId||'', babak:o.babak||'', teamA:o.teamA||'Tim A', teamB:o.teamB||'Tim B',
+    pointsToWin:o.pointsToWin||DEFAULT_POIN, bestOf:o.bestOf||DEFAULT_BEST_OF, firstServer:o.firstServer||0,
+    games:[], cur:{a:0,b:0}, finished:false
+  };
+}
+function gamesNeeded(){ return Math.floor(S.bestOf/2)+1; }        // Bo5 -> 3
+function gamesWon(){
+  let a=0,b=0; S.games.forEach(g=>{ if(g.a>g.b)a++; else if(g.b>g.a)b++; }); return {a,b};
+}
+function gameWinner(){
+  const {a,b}=S.cur, p=S.pointsToWin;
+  if(a>=p && a-b>=2) return 'a';
+  if(b>=p && b-a>=2) return 'b';
+  return null;
+}
+// status game point / match point untuk highlight
+function pointFlags(){
+  const {a,b}=S.cur, p=S.pointsToWin;
+  const w=gamesWon(); const need=gamesNeeded();
+  const flag=(x,y,who)=>{
+    if(S.finished) return null;
+    // butuh 1 poin lagi utk memenangkan game ini?
+    const atGamePoint = (x>=p-1) && (x-y>=1);
+    if(!atGamePoint) return null;
+    return (w[who]===need-1) ? 'match' : 'game';
+  };
+  return { a:flag(a,b,'a'), b:flag(b,a,'b') };
+}
+// siapa yang servis sekarang (indikator; standar 2 poin gantian, deuce 1 poin)
+function serverNow(){
+  const {a,b}=S.cur, p=S.pointsToWin, total=a+b;
+  const deuce = a>=p-1 && b>=p-1;
+  const startServer = (S.games.length%2===0) ? S.firstServer : (1-S.firstServer);
+  const serves = deuce ? total : Math.floor(total/2);
+  return (serves%2===0) ? startServer : (1-startServer);   // 0=A, 1=B
+}
+
+/* =========================================================================
+   AKSI SKOR
+========================================================================= */
+function pushUndo(){
+  undoStack.push(JSON.stringify({games:S.games, cur:S.cur, finished:S.finished}));
+  if(undoStack.length>200) undoStack.shift();
+}
+function addPoint(team){
+  if(S.finished) return;
+  pushUndo();
+  S.cur[team]++;
+  if(gameWinner()){
+    S.games.push({a:S.cur.a, b:S.cur.b});
+    S.cur={a:0,b:0};
+    const w=gamesWon();
+    if(w.a===gamesNeeded() || w.b===gamesNeeded()) S.finished=true;
+  }
+  persist(); render();
+}
+function subPoint(team){
+  if(S.cur[team]>0){ pushUndo(); S.cur[team]--; persist(); render(); }
+}
+function undo(){
+  if(!undoStack.length) return;
+  const prev=JSON.parse(undoStack.pop());
+  S.games=prev.games; S.cur=prev.cur; S.finished=prev.finished;
+  persist(); render();
+}
+function resetGame(){
+  if(S.cur.a===0 && S.cur.b===0) return;
+  if(!confirm('Reset poin game yang sedang berjalan ke 0-0?')) return;
+  pushUndo(); S.cur={a:0,b:0}; persist(); render();
+}
+function resetMatch(){
+  if(!confirm('Reset SELURUH pertandingan? Semua game yang tercatat akan dihapus.')) return;
+  undoStack=[]; S.games=[]; S.cur={a:0,b:0}; S.finished=false; persist(); render();
+}
+function skorString(){ return S.games.map(g=>g.a+'-'+g.b).join(', '); }
+
+/* =========================================================================
+   PERSISTENSI LOKAL
+========================================================================= */
+function persist(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function loadPersisted(){
+  try{ const raw=localStorage.getItem(LS_KEY); if(!raw) return null; const o=JSON.parse(raw);
+       if(o && o.cur && Array.isArray(o.games)) return o; }catch(e){}
+  return null;
+}
+function clearPersisted(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
+
+/* =========================================================================
+   RENDER BOARD
+========================================================================= */
+function render(){
+  document.getElementById('bMid').textContent = S.matchId||'—';
+  document.getElementById('bBabak').textContent = S.babak||'';
+  document.getElementById('bBoInfo').textContent = `Best of ${S.bestOf} · poin ${S.pointsToWin} · butuh ${gamesNeeded()} game`;
+  const nA=document.getElementById('nameA'), nB=document.getElementById('nameB');
+  if(document.activeElement!==nA) nA.textContent=S.teamA;
+  if(document.activeElement!==nB) nB.textContent=S.teamB;
+  document.getElementById('ptA').textContent=S.cur.a;
+  document.getElementById('ptB').textContent=S.cur.b;
+  const w=gamesWon();
+  document.getElementById('gwA').textContent=w.a;
+  document.getElementById('gwB').textContent=w.b;
+
+  // pips (game dimenangkan, sampai gamesNeeded)
+  const need=gamesNeeded();
+  const pip=(el,n)=>{ let h=''; for(let i=0;i<need;i++) h+=`<span class="pip ${i<n?'on':''}"></span>`; el.innerHTML=h; };
+  pip(document.getElementById('pipsA'),w.a);
+  pip(document.getElementById('pipsB'),w.b);
+
+  // serve indicator
+  const srv = S.finished ? -1 : serverNow();
+  document.getElementById('srvA').className='serve'+(srv===0?' on':'');
+  document.getElementById('srvB').className='serve'+(srv===1?' on':'');
+
+  // game/match point banner + winner
+  const mp=document.getElementById('mp');
+  if(S.finished){
+    const champ = w.a>w.b ? S.teamA : S.teamB;
+    mp.style.display='inline-block'; mp.className='mp winner';
+    mp.textContent='🏆 PEMENANG: '+champ+'  ('+w.a+'–'+w.b+' game)';
+  }else{
+    const f=pointFlags();
+    let who=null, kind=null;
+    if(f.a){who='A';kind=f.a;} else if(f.b){who='B';kind=f.b;}
+    if(who){
+      mp.style.display='inline-block';
+      mp.className='mp '+(kind==='match'?'match':'game');
+      mp.textContent=(kind==='match'?'MATCH POINT':'GAME POINT')+' — '+(who==='A'?S.teamA:S.teamB);
+    }else{ mp.style.display='none'; }
+  }
+
+  // history chips (game selesai)
+  const hist=document.getElementById('history');
+  hist.innerHTML = S.games.map((g,i)=>{
+    const aw=g.a>g.b;
+    const a = aw?`<b>${g.a}</b>`:`${g.a}`;
+    const b = aw?`${g.b}`:`<b>${g.b}</b>`;
+    return `<span class="g-chip">G${i+1} ${a}-${b}</span>`;
+  }).join('');
+
+  document.getElementById('btnUndo').disabled = undoStack.length===0;
+}
+
+/* =========================================================================
+   NAVIGASI SCREEN
+========================================================================= */
+function showSelect(){
+  document.body.classList.remove('playing');
+  document.getElementById('screen-select').style.display='block';
+  document.getElementById('screen-board').style.display='none';
+}
+function showBoard(){
+  document.body.classList.add('playing');
+  document.getElementById('screen-select').style.display='none';
+  document.getElementById('screen-board').style.display='block';
+  render();
+}
+
+/* =========================================================================
+   MENYIMPAN SKOR KE SHEET (via Apps Script) + konfirmasi via gviz
+========================================================================= */
+async function saveScore(){
+  const st=document.getElementById('saveStatus');
+  if(!S.games.length){ st.className='save-status err'; st.textContent='Belum ada game selesai untuk disimpan.'; return; }
+  if(!APPS_SCRIPT_URL){ st.className='save-status err';
+    st.textContent='APPS_SCRIPT_URL belum diisi — skor: "'+skorString()+'" (salin manual ke Sheet).'; return; }
+  if(!S.matchId){
+    if(!confirm('Match ini tidak punya MatchID (input manual). Tetap kirim tanpa MatchID tidak bisa menyimpan ke Sheet.\nSalin skor manual saja?')) return;
+    st.className='save-status err'; st.textContent='Tanpa MatchID. Skor: "'+skorString()+'"'; return;
+  }
+  const skor=skorString();
+  const btn=document.getElementById('btnSave'); btn.disabled=true;
+  st.className='save-status work'; st.textContent='Menyimpan…';
+  const payload={matchId:S.matchId, skor:skor, secret:SAVE_SECRET};
+  try{
+    // request "simple" (text/plain) -> tanpa preflight CORS. Respons bisa opaque; abaikan.
+    await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  }catch(e){ /* kemungkinan CORS pada pembacaan respons; tulisan tetap terkirim. Konfirmasi via gviz. */ }
+  // konfirmasi: baca ulang Jadwal, cek kolom Skor untuk MatchID ini
+  st.textContent='Menyimpan… mengonfirmasi ke Sheet…';
+  const ok=await confirmSaved(S.matchId, skor);
+  btn.disabled=false;
+  if(ok){ st.className='save-status ok'; st.textContent='✓ Tersimpan ke Sheet ('+skor+'). Dashboard akan update otomatis.'; }
+  else{ st.className='save-status err';
+        st.textContent='Terkirim tapi belum terkonfirmasi. Cek Sheet manual. Skor: "'+skor+'"'; }
+}
+async function confirmSaved(matchId, skor){
+  for(let i=0;i<6;i++){
+    await new Promise(r=>setTimeout(r, i===0?1200:2200));
+    try{
+      const rows=await fetchTab(TAB_JADWAL);
+      const row=rows.find(o=>String(pick(o,'MatchID')).trim().toLowerCase()===String(matchId).trim().toLowerCase());
+      if(row && normSkor(pick(row,'Skor'))===normSkor(skor)) return true;
+    }catch(e){}
+  }
+  return false;
+}
+
+/* =========================================================================
+   LAYAR SELECT: build kontrol & daftar match
+========================================================================= */
+function buildSegments(){
+  const segP=document.getElementById('segPoin');
+  segP.innerHTML=[11,21].map(v=>`<button data-v="${v}" class="${v===cfgPoin?'on':''}">${v}</button>`).join('');
+  segP.querySelectorAll('button').forEach(b=>b.onclick=()=>{ cfgPoin=+b.dataset.v; buildSegments(); });
+
+  const segB=document.getElementById('segBo');
+  segB.innerHTML=[3,5,7].map(v=>`<button data-v="${v}" class="${v===cfgBo?'on':''}">${v}</button>`).join('');
+  segB.querySelectorAll('button').forEach(b=>b.onclick=()=>{ cfgBo=+b.dataset.v; buildSegments(); });
+
+  const segS=document.getElementById('segServe');
+  segS.innerHTML=[['0','A'],['1','B']].map(([v,l])=>`<button data-v="${v}" class="${(+v)===cfgServe?'on':''}">${l}</button>`).join('');
+  segS.querySelectorAll('button').forEach(b=>b.onclick=()=>{ cfgServe=+b.dataset.v; buildSegments(); });
+}
+function fillMatchSelect(){
+  const sel=document.getElementById('matchSelect');
+  if(!JADWAL.length){ sel.innerHTML='<option value="">(daftar match tidak tersedia — isi manual)</option>'; return; }
+  let html='<option value="">— pilih match / isi manual —</option>';
+  JADWAL.forEach((m,i)=>{
+    const done = m.Skor && String(m.Skor).trim() ? ' ✓' : '';
+    html+=`<option value="${i}">${esc(m.MatchID)} · ${esc(m.TimA)} vs ${esc(m.TimB)}${done}</option>`;
+  });
+  sel.innerHTML=html;
+  sel.onchange=()=>{
+    const m=JADWAL[+sel.value];
+    if(!m) return;
+    document.getElementById('inA').value=m.TimA||'';
+    document.getElementById('inB').value=m.TimB||'';
+    cfgBo=bestOfFromFormat(m.Format); buildSegments();
+  };
+}
+async function loadJadwal(){
+  if(!SHEET_ID){ setStatus('SHEET_ID belum diisi','warn');
+    showBanner('Isi <code>SHEET_ID</code> pada bagian konfigurasi. Anda tetap bisa memakai scoreboard dengan input nama manual (tanpa simpan ke Sheet).','');
+    fillMatchSelect(); return; }
+  try{
+    setStatus('Memuat daftar match…','ok');
+    const jad=await fetchTab(TAB_JADWAL);
+    JADWAL=jad.map(o=>({
+      MatchID:pick(o,'MatchID'),Tanggal:pick(o,'Tanggal'),Jam:pick(o,'Jam'),Babak:pick(o,'Babak'),
+      Format:pick(o,'Format'),TimA:pick(o,'TimA'),TimB:pick(o,'TimB'),Wasit:pick(o,'Wasit'),Skor:pick(o,'Skor')
+    })).filter(m=>m.MatchID);
+    setStatus(JADWAL.length? 'Connected · '+JADWAL.length+' match':'Terhubung, tapi Jadwal kosong', JADWAL.length?'ok':'warn');
+    showBanner('','');
+    fillMatchSelect();
+  }catch(e){
+    setStatus('Gagal memuat Jadwal','err');
+    showBanner('Gagal memuat Jadwal: <b>'+esc(e.message)+'</b>. Pastikan Sheet dibagikan <i>"Anyone with the link: Viewer"</i>. Anda masih bisa memakai input nama manual.','err');
+    fillMatchSelect();
+  }
+}
+
+function startMatch(){
+  const sel=document.getElementById('matchSelect');
+  const m = sel.value!=='' ? JADWAL[+sel.value] : null;
+  const teamA=(document.getElementById('inA').value||'').trim()||'Tim A';
+  const teamB=(document.getElementById('inB').value||'').trim()||'Tim B';
+  S=newState({
+    matchId:m?m.MatchID:'', babak:m?m.Babak:'', teamA, teamB,
+    pointsToWin:cfgPoin, bestOf:cfgBo, firstServer:cfgServe
+  });
+  undoStack=[]; persist(); showBoard();
+  document.getElementById('saveStatus').textContent='';
+}
+
+/* =========================================================================
+   RESUME (state tersimpan)
+========================================================================= */
+function maybeOfferResume(){
+  const o=loadPersisted(); if(!o) return;
+  const w=(o.games||[]).reduce((ac,g)=>{ if(g.a>g.b)ac.a++; else if(g.b>g.a)ac.b++; return ac;},{a:0,b:0});
+  document.getElementById('resumeText').innerHTML=
+    `Ada pertandingan tersimpan: <b>${esc(o.matchId||'(manual)')}</b> — ${esc(o.teamA)} <b>${w.a}</b> vs <b>${w.b}</b> ${esc(o.teamB)}`+
+    (o.finished?' (selesai)':` · game ini ${o.cur.a}-${o.cur.b}`);
+  document.getElementById('resumeCard').style.display='';
+}
+
+/* =========================================================================
+   INIT & EVENTS
+========================================================================= */
+// tombol poin
+document.querySelectorAll('.plus').forEach(b=>b.onclick=()=>addPoint(b.dataset.team));
+document.querySelectorAll('.minus').forEach(b=>b.onclick=()=>subPoint(b.dataset.team));
+document.getElementById('btnUndo').onclick=undo;
+document.getElementById('btnResetGame').onclick=resetGame;
+document.getElementById('btnResetMatch').onclick=resetMatch;
+document.getElementById('btnSave').onclick=saveScore;
+document.getElementById('btnBack').onclick=()=>{ showSelect(); };
+document.getElementById('btnStart').onclick=startMatch;
+document.getElementById('btnFull').onclick=()=>{
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); }
+  else{ document.exitFullscreen&&document.exitFullscreen(); }
+};
+// edit nama tim langsung di board
+function bindName(id,key){
+  const el=document.getElementById(id);
+  el.addEventListener('blur',()=>{ S[key]=(el.textContent||'').trim()||(key==='teamA'?'Tim A':'Tim B'); persist(); render(); });
+  el.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); el.blur(); } });
+}
+bindName('nameA','teamA'); bindName('nameB','teamB');
+// resume buttons
+document.getElementById('btnResume').onclick=()=>{
+  const o=loadPersisted(); if(!o) return;
+  S=Object.assign(newState({}), o); undoStack=[];
+  document.getElementById('resumeCard').style.display='none';
+  showBoard();
+};
+document.getElementById('btnDiscard').onclick=()=>{
+  clearPersisted(); document.getElementById('resumeCard').style.display='none';
+};
+// keyboard: A/L = +1 (kiri/kanan), Z/M = -1, U = undo
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('screen-board').style.display==='none') return;
+  if(/input|textarea/i.test(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  const k=e.key.toLowerCase();
+  if(k==='a') addPoint('a'); else if(k==='l') addPoint('b');
+  else if(k==='z') subPoint('a'); else if(k==='m') subPoint('b');
+  else if(k==='u') undo();
+});
+
+// mulai
+buildSegments();
+maybeOfferResume();
+loadJadwal();
+</script>
+</body>
+</html>
